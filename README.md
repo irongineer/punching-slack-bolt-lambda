@@ -2,6 +2,7 @@
 
 Sample project to run slack framework bolt with Typescript on AWS Lambda managed by Serverless Framework
 
+```bash
 # node 10.13+ required
 
 # 0) Create a new project with this template
@@ -66,3 +67,4 @@ export AWS_SECRET_ACCESS_KEY=yyy
 sls deploy
 
 # Update the Request URL for the slash command with the deployed AWS URL
+```
