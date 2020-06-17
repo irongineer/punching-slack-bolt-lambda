@@ -44,65 +44,9 @@ const app = new App({
   logLevel: LogLevel.DEBUG,
 });
 
-const modalView: View = {
-  callback_id: 'time_record_type_select',
-  type: 'modal',
-  title: {
-    type: 'plain_text',
-    text: 'Select Time Record Type',
-    emoji: true,
-  },
-  close: {
-    type: 'plain_text',
-    text: 'Cancel',
-    emoji: true,
-  },
-  blocks: [
-    {
-      block_id: 'timeRecordType',
-      type: 'actions',
-      elements: [
-        {
-          type: 'button',
-          action_id: 'clock-in',
-          text: {
-            type: 'plain_text',
-            text: 'Clock In',
-          },
-          value: 'clock-in',
-        },
-        {
-          type: 'button',
-          action_id: 'clock-out',
-          text: {
-            type: 'plain_text',
-            text: 'Clock Out',
-          },
-          value: 'clock-out',
-        },
-      ],
-    },
-  ],
-};
 // ------------------------
 // Application Logic
 // ------------------------
-app.shortcut('hello', async ({ ack, context, body, logger }) => {
-  try {
-    // Open Modal
-    await app.client.views.open({
-      token: context.botToken,
-      trigger_id: body.trigger_id,
-      view: modalView,
-    });
-    await ack();
-  } catch (e) {
-    logger.error(e);
-    console.error(`:x: Failed to post a message (error: ${e})`);
-    await ack();
-  }
-});
-
 app.shortcut('start_clock', async ({ ack, context, body, logger }) => {
   console.log("app.shortcut('start_clock')");
 
