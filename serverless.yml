@@ -1,0 +1,39 @@
+service: punching-slack-bolt-lambda
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+provider:
+  name: aws
+  stage: ${opt:stage, 'dev'}
+  region: ap-northeast-1
+  runtime: nodejs12.x
+  memorySize: 128
+  timeout: 30
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+      Resource: '*'
+  logs:
+    restApi:
+      accessLogging: true
+
+functions:
+  api:
+    handler: src/handler.app
+    # layers:
+    #   - { Ref: NodeModulesLambdaLayer }
+    events:
+      - http:
+         path: /slack/events
+         method: post
+    environment:
+      SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
+      SLACK_APP_ID: ${env:SLACK_APP_ID}
+      SLACK_BOT_TOKEN: ${env:SLACK_BOT_TOKEN}
+      SLACK_USER_TOKEN: ${env:SLACK_USER_TOKEN}
+
+# layers:
+#   nodeModules:
+#     path: ./layers
