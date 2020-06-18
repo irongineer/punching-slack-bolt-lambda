@@ -2,7 +2,7 @@ import axios from 'axios';
 import { APIGatewayEvent, Context } from 'aws-lambda';
 import * as awsServerlessExpress from 'aws-serverless-express';
 import { App, ExpressReceiver, ViewSubmitAction, BlockAction, ButtonAction, LogLevel, CodedError } from '@slack/bolt';
-import { Button, View } from '@slack/types';
+import { Button } from '@slack/types';
 import { payloads } from './payloads';
 import * as helpers from './helpers';
 
@@ -163,15 +163,14 @@ app.action<BlockAction<ButtonAction>>(
   },
 );
 
-app.view('time_record_share', async ({ view, body, ack, logger }) => {
+app.view<ViewSubmitActionWithResponseUrls>('time_record_share', async ({ view, body, ack, logger }) => {
   console.log("app.view('time_record_share')");
   // parse weather stats stored in views metadata
   const timeRecord = JSON.parse(view.private_metadata);
 
   // get the response url for the selected channel and post to it
   try {
-    const bodyWithUrls = body as ViewSubmitActionWithResponseUrls;
-    bodyWithUrls.response_urls.forEach(async url => {
+    body.response_urls.forEach(async url => {
       const payload = payloads.message(timeRecord);
       payload.response_type = 'in_channel';
       await axios.post(url.response_url, payload);
