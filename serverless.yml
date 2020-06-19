@@ -3,6 +3,9 @@ service: punching-slack-bolt-lambda
 plugins:
   - serverless-webpack
   - serverless-offline
+custom:
+  serverless-offline:
+    useChildProcesses: true
 provider:
   name: aws
   stage: ${opt:stage, 'dev'}
@@ -14,7 +17,7 @@ provider:
     - Effect: Allow
       Action:
         - lambda:InvokeFunction
-      Resource: '*'
+      Resource: "*"
   logs:
     restApi:
       accessLogging: true
@@ -26,14 +29,13 @@ functions:
     #   - { Ref: NodeModulesLambdaLayer }
     events:
       - http:
-         path: /slack/events
-         method: post
+          path: /slack/events
+          method: post
     environment:
       SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
       SLACK_APP_ID: ${env:SLACK_APP_ID}
       SLACK_BOT_TOKEN: ${env:SLACK_BOT_TOKEN}
       SLACK_USER_TOKEN: ${env:SLACK_USER_TOKEN}
-
 # layers:
 #   nodeModules:
 #     path: ./layers
