@@ -15,6 +15,7 @@ import {
 import { Button } from '@slack/types';
 import { payloads } from './payloads';
 import * as helpers from './helpers';
+import { SlowBuffer } from 'buffer';
 
 interface ViewSubmitActionWithResponseUrls extends ViewSubmitAction {
   response_urls: ResponseUrlInfo[];
@@ -244,10 +245,10 @@ app.error(printCompleteJSON);
 // AWS Lambda Handler
 // ------------------------
 const server = awsServerlessExpress.createServer(expressReceiver.app);
-module.exports.app = (event: APIGatewayEvent, context: LambdaContext) => {
+module.exports.app = async (event: APIGatewayEvent, context: LambdaContext) => {
   console.log('⚡️ Bolt app is running!');
 
-  awsServerlessExpress.proxy(server, event, context);
+  awsServerlessExpress.proxy(server, event, context, 'PROMISE').promise;
   console.log('awsServerlessExpress.proxy: server', server);
   console.log('awsServerlessExpress.proxy: event', event);
   console.log('awsServerlessExpress.proxy: context', context);
