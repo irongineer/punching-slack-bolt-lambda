@@ -59,8 +59,8 @@ const app = new App({
 // ------------------------
 // Application Logic
 // ------------------------
-app.shortcut<GlobalShortcut>('start_clock', async ({ ack, context, body, logger }) => {
-  console.log("app.shortcut('start_clock')");
+app.shortcut<GlobalShortcut>('clock', async ({ ack, context, body, logger }) => {
+  console.log("app.shortcut('clock')");
 
   try {
     await openTimeRecordTypesModal(context, body);
@@ -153,7 +153,6 @@ app.view<ViewSubmitActionWithResponseUrls>('time_record_share', async ({ view, b
   // parse timeRecord data stored in views metadata
   const timeRecord = JSON.parse(view.private_metadata);
   const payload = payloads.message(timeRecord);
-  payload.response_type = 'in_channel';
 
   // get the response url for the selected channel and post to it
   try {
@@ -161,7 +160,7 @@ app.view<ViewSubmitActionWithResponseUrls>('time_record_share', async ({ view, b
       await app.client.chat.postMessage({
         token: context.botToken,
         channel: url.channel_id,
-        text: payload,
+        text: payload.blocks[0].text.text,
       });
       // await axios.post(url.response_url, payload);
     });
@@ -180,6 +179,21 @@ app.view<ViewSubmitActionWithResponseUrls>('time_record_share', async ({ view, b
 app.command('/clock', async ({ context, body, logger, ack }) => {
   try {
     await openTimeRecordTypesModal(context, body);
+    await ack();
+  } catch (e) {
+    logger.error(e);
+    console.error(`:x: Failed to post a message (error: ${e})`);
+    await ack();
+  }
+});
+
+app.command('/echo_me ', async ({ body, context, logger, ack }) => {
+  try {
+    await app.client.chat.postMessage({
+      token: context.botToken,
+      channel: body.channel_id,
+      text: 'Hello!!!',
+    });
     await ack();
   } catch (e) {
     logger.error(e);
