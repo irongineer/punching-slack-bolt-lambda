@@ -12,7 +12,6 @@ serverless create \
 
 # 1) Slack App Configuration
 # Go to https://api.slack.com/apps
-#   - Create a Slash command named `/echo_me` (Request URL can be a dummy)
 #   - Create a Slash command named `/clock` (Request URL can be a dummy)
 #   - Create a Global Shortcut command named `/start_clock` (Request URL can be a dummy)
 #   - Create a bot user @{bot-name}

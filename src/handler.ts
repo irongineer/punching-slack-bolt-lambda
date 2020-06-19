@@ -1,6 +1,17 @@
-import { APIGatewayEvent, Context } from 'aws-lambda';
+import { APIGatewayEvent, Context as LambdaContext } from 'aws-lambda';
 import * as awsServerlessExpress from 'aws-serverless-express';
-import { App, ExpressReceiver, ViewSubmitAction, BlockAction, ButtonAction, LogLevel, CodedError } from '@slack/bolt';
+import {
+  App,
+  ExpressReceiver,
+  ViewSubmitAction,
+  Context,
+  LogLevel,
+  CodedError,
+  BlockAction,
+  ButtonAction,
+  GlobalShortcut,
+  SlashCommand,
+} from '@slack/bolt';
 import { Button } from '@slack/types';
 import { payloads } from './payloads';
 import * as helpers from './helpers';
@@ -46,38 +57,11 @@ const app = new App({
 // ------------------------
 // Application Logic
 // ------------------------
-app.shortcut('start_clock', async ({ ack, context, body, logger }) => {
+app.shortcut<GlobalShortcut>('start_clock', async ({ ack, context, body, logger }) => {
   console.log("app.shortcut('start_clock')");
 
   try {
-    // 打刻種別APIを呼び出し結果のモック
-    const result = payloads.resultTimeRecordTypes;
-
-    // APIの結果をモーダルのボタンに反映
-    const items: Button[] = result.data.map((item: any) => {
-      const parsedItem: Button = {
-        type: 'button',
-        action_id: item.timeRecordType,
-        text: {
-          type: 'plain_text',
-          text: item.displayNameEn,
-        },
-        value: item.timeRecordType,
-      };
-      if (item.color === 'primary' || item.color === 'danger') {
-        parsedItem.style = item.color;
-      }
-      return parsedItem;
-    });
-    console.log('payloads.timeRecordTypeSelect(items)', payloads.timeRecordTypeSelect(items));
-
-    // モーダルを開く
-    const modalViewResult = await app.client.views.open({
-      token: context.botToken,
-      trigger_id: body.trigger_id,
-      view: payloads.timeRecordTypeSelect(items),
-    });
-    console.log('modalViewResult', modalViewResult);
+    await openTimeRecordTypesModal(context, body);
     await ack();
   } catch (e) {
     logger.error(e);
@@ -86,7 +70,7 @@ app.shortcut('start_clock', async ({ ack, context, body, logger }) => {
   }
 });
 
-// action_id: clock-in のボタンを押すイベントをリッスン
+// action_id: clock-in 等のボタンを押すイベントをリッスン
 // （そのボタンはモーダルビューの中にあるという想定）
 app.action<BlockAction<ButtonAction>>(
   /^(clock-in|clock-out|break-start|break-end)/,
@@ -193,34 +177,7 @@ app.view<ViewSubmitActionWithResponseUrls>('time_record_share', async ({ view, b
 
 app.command('/clock', async ({ context, body, logger, ack }) => {
   try {
-    // 打刻種別APIを呼び出し結果のモック
-    const result = payloads.resultTimeRecordTypes;
-
-    // APIの結果をモーダルのボタンに反映
-    const items: Button[] = result.data.map((item: any) => {
-      const parsedItem: Button = {
-        type: 'button',
-        action_id: item.timeRecordType,
-        text: {
-          type: 'plain_text',
-          text: item.displayNameEn,
-        },
-        value: item.timeRecordType,
-      };
-      if (item.color === 'primary' || item.color === 'danger') {
-        parsedItem.style = item.color;
-      }
-      return parsedItem;
-    });
-    console.log('payloads.timeRecordTypeSelect(items)', payloads.timeRecordTypeSelect(items));
-
-    // モーダルを開く
-    const modalViewResult = await app.client.views.open({
-      token: context.botToken,
-      trigger_id: body.trigger_id,
-      view: payloads.timeRecordTypeSelect(items),
-    });
-    console.log('modalViewResult', modalViewResult);
+    await openTimeRecordTypesModal(context, body);
     await ack();
   } catch (e) {
     logger.error(e);
@@ -229,22 +186,36 @@ app.command('/clock', async ({ context, body, logger, ack }) => {
   }
 });
 
-app.command('/echo_me', async ({ command, logger, ack, say }) => {
-  console.log('app.command(echo_me)');
-  try {
-    await say(`You say '${command.text}'`);
-    await ack();
-  } catch (e) {
-    logger.error(e);
-    await ack(`:x: Failed to post a message (error: ${e})`);
-  }
-});
+const openTimeRecordTypesModal = async (context: Context, body: SlashCommand | GlobalShortcut): Promise<void> => {
+  // 打刻種別APIを呼び出し結果のモック
+  const result = payloads.resultTimeRecordTypes;
 
-app.event('app_home_opened', async ({ event, say }) => {
-  console.log("app.event('app_home_opened'");
-  console.log(`event: ${JSON.stringify(event)}`);
-  await say(`Hello world, and welcome <@${event.user}> from AWS Lambda.`);
-});
+  // APIの結果をモーダルのボタンに反映
+  const items: Button[] = result.data.map((item: any) => {
+    const parsedItem: Button = {
+      type: 'button',
+      action_id: item.timeRecordType,
+      text: {
+        type: 'plain_text',
+        text: item.displayNameEn,
+      },
+      value: item.timeRecordType,
+    };
+    if (item.color === 'primary' || item.color === 'danger') {
+      parsedItem.style = item.color;
+    }
+    return parsedItem;
+  });
+  console.log('payloads.timeRecordTypeSelect(items)', payloads.timeRecordTypeSelect(items));
+
+  // モーダルを開く
+  const modalViewResult = await app.client.views.open({
+    token: context.botToken,
+    trigger_id: body.trigger_id,
+    view: payloads.timeRecordTypeSelect(items),
+  });
+  console.log('modalViewResult', modalViewResult);
+};
 
 const printCompleteJSON = async (error: CodedError): Promise<void> => {
   console.error(JSON.stringify(error));
@@ -257,7 +228,7 @@ app.error(printCompleteJSON);
 // AWS Lambda Handler
 // ------------------------
 const server = awsServerlessExpress.createServer(expressReceiver.app);
-module.exports.app = (event: APIGatewayEvent, context: Context) => {
+module.exports.app = (event: APIGatewayEvent, context: LambdaContext) => {
   console.log('⚡️ Bolt app is running!');
 
   awsServerlessExpress.proxy(server, event, context);
