@@ -33,12 +33,14 @@ interface CustomStatus {
   status_expiration: number;
 }
 
+const processBeforeResponse = true;
+
 // ------------------------
 // Bolt App Initialization
 // ------------------------
 const expressReceiver = new ExpressReceiver({
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   signingSecret: process.env.SLACK_SIGNING_SECRET!,
+  processBeforeResponse,
 });
 const app = new App({
   // If you don't use userToken, you need only botToken without authorize method
@@ -50,7 +52,7 @@ const app = new App({
     });
   },
   receiver: expressReceiver,
-  processBeforeResponse: true,
+  processBeforeResponse,
   logLevel: LogLevel.DEBUG,
 });
 
