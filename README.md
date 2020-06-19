@@ -12,11 +12,12 @@ serverless create \
 
 # 1) Slack App Configuration
 # Go to https://api.slack.com/apps
-#   - Create a Slash command named `/clock` (Request URL can be a dummy)
-#   - Create a Global Shortcut command named `/start_clock` (Request URL can be a dummy)
-#   - Create a bot user @{bot-name}
-#   - Add user scope `profile:write`
-#   - Install the app to your workspace
+#   - Create a Slash Command named `/clock` in 'Slash Commands' tab (Request URL can be a dummy)
+#   - Create a Global Shortcut named `Clock Time Record` and Callback ID `clock` in 'Interactivity & Shortcuts' tab (Request URL can be a dummy)
+#   - Create a bot user @{bot-name} in 'App Home' Tab
+#   - Add user scope `profile:write` in 'OAuth & Permissions' tab
+#   - Install the app to your workspace in 'OAuth & Permissions' tab
+#   - Get Environment Variables from 'Basic Information' and 'OAuth & Permissions' tab
 
 # 2) App Setup
 yarn global add serverless
@@ -34,7 +35,8 @@ source .env
 sls offline # local dev
 ngrok http 3000 # on another terminal window
 
-# Update the Request URL for the slash command with the ngrok URL
+# Update the Request URL for the 'Slash Commands' and 'Interactivity & Shortcuts' with the ngrok URL
+# ex) https://xxxxxxxxxxx.ngrok.io/dev/slack/events
 
 # 4) Make sure it works on Slack
 #  `Clock Time Record` on Global Shortcuts
@@ -45,5 +47,6 @@ export AWS_ACCESS_KEY_ID=xxx
 export AWS_SECRET_ACCESS_KEY=yyy
 sls deploy
 
-# Update the Request URL for the slash command with the deployed AWS URL
+# Update the Request URL for the 'Slash Commands' and 'Interactivity & Shortcuts' with the deployed AWS URL
+# ex) https://xxxxxxxxxx.execute-api.ap-northeast-1.amazonaws.com/dev/slack/events
 ```
