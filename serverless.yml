@@ -31,6 +31,7 @@ functions:
       - http:
           path: /slack/events
           method: post
+          async: true
     environment:
       SLACK_SIGNING_SECRET: ${env:SLACK_SIGNING_SECRET}
       SLACK_APP_ID: ${env:SLACK_APP_ID}
