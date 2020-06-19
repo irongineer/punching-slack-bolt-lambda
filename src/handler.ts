@@ -181,7 +181,7 @@ app.view<ViewSubmitActionWithResponseUrls>('time_record_share', async ({ view, b
     });
 
     // clear all open views after user shares to channel
-    ack({
+    await ack({
       response_action: 'clear',
     });
   } catch (e) {
