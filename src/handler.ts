@@ -35,6 +35,7 @@ interface CustomStatus {
 }
 
 const processBeforeResponse = true;
+const token_database = {} as any;
 
 // ------------------------
 // Bolt App Initialization
@@ -42,17 +43,28 @@ const processBeforeResponse = true;
 const expressReceiver = new ExpressReceiver({
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   signingSecret: process.env.SLACK_SIGNING_SECRET!,
+  clientId: process.env.SLACK_CLIENT_ID,
+  clientSecret: process.env.SLACK_CLIENT_SECRET,
+  stateSecret: 'my-state-secret',
+  scopes: ['commands'],
+  installationStore: {
+    storeInstallation: async installation => {
+      // TODO: 実際のデータベースに保存するために、ここのコードを変更
+      console.log('storeInstallation', installation);
+      token_database[installation.team.id] = installation;
+      console.log('token_database', token_database);
+      return Promise.resolve();
+    },
+    fetchInstallation: async installQuery => {
+      // TODO: 実際のデータベースから取得するために、ここのコードを変更
+      console.log('fetchInstallation', installQuery);
+      const installation = token_database[installQuery.teamId];
+      return Promise.resolve(installation);
+    },
+  },
   processBeforeResponse,
 });
 const app = new App({
-  // If you don't use userToken, you need only botToken without authorize method
-  authorize: () => {
-    return Promise.resolve({
-      botId: process.env.SLACK_APP_ID,
-      botToken: process.env.SLACK_BOT_TOKEN,
-      userToken: process.env.SLACK_USER_TOKEN,
-    });
-  },
   receiver: expressReceiver,
   processBeforeResponse,
   logLevel: LogLevel.DEBUG,
@@ -128,6 +140,9 @@ app.action<BlockAction<ButtonAction>>(
     }
 
     try {
+      // 打刻種別によってカスタムステータスを決定
+      // await changeCustomStatusByTimeRecordType(body, context);
+
       // モーダルビューを更新
       if (body.view) {
         const modalUpdateResult = await app.client.views.update({
