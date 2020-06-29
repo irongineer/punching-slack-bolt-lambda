@@ -63,7 +63,7 @@ app.shortcut<GlobalShortcut>('clock', async ({ ack, context, body, logger }) => 
   console.log("app.shortcut('clock')");
 
   try {
-    await openTimeRecordTypesModal(context, body);
+    await openTimeRecordTypesModal(body, context);
     await ack();
   } catch (e) {
     logger.error(e);
@@ -107,28 +107,7 @@ app.action<BlockAction<ButtonAction>>(
 
     try {
       // 打刻種別によってカスタムステータスを決定
-      const actionId = body.actions[0].action_id;
-      const customStatus = {} as CustomStatus;
-      if (actionId === 'clock-in' || actionId === 'break-end') {
-        customStatus.status_text = 'on duty';
-        customStatus.status_emoji = ':desktop_computer:';
-        customStatus.status_expiration = 0;
-      } else if (actionId === 'break-start') {
-        customStatus.status_text = 'on break';
-        customStatus.status_emoji = ':coffee:';
-        customStatus.status_expiration = 0;
-      } else {
-        customStatus.status_text = '';
-        customStatus.status_emoji = '';
-        customStatus.status_expiration = 0;
-      }
-      console.log('customStatus', customStatus);
-      // status を変更
-      const statusChangeResult = await app.client.users.profile.set({
-        token: context.userToken,
-        profile: JSON.stringify(customStatus),
-      });
-      console.log('statusChangeResult', statusChangeResult);
+      await changeCustomStatusByTimeRecordType(body, context);
 
       // モーダルビューを更新
       const modalUpdateResult = await app.client.views.update({
@@ -178,7 +157,7 @@ app.view<ViewSubmitActionWithResponseUrls>('time_record_share', async ({ view, b
 
 app.command('/clock', async ({ context, body, logger, ack }) => {
   try {
-    await openTimeRecordTypesModal(context, body);
+    await openTimeRecordTypesModal(body, context);
     await ack();
   } catch (e) {
     logger.error(e);
@@ -202,7 +181,7 @@ app.command('/echo_me ', async ({ body, context, logger, ack }) => {
   }
 });
 
-const openTimeRecordTypesModal = async (context: Context, body: SlashCommand | GlobalShortcut): Promise<void> => {
+const openTimeRecordTypesModal = async (body: SlashCommand | GlobalShortcut, context: Context): Promise<void> => {
   // 打刻種別APIを呼び出し結果のモック
   const result = payloads.resultTimeRecordTypes;
 
@@ -235,6 +214,31 @@ const openTimeRecordTypesModal = async (context: Context, body: SlashCommand | G
 
 const printCompleteJSON = async (error: CodedError): Promise<void> => {
   console.error(JSON.stringify(error));
+};
+
+const changeCustomStatusByTimeRecordType = async (body: BlockAction<ButtonAction>, context: Context): Promise<void> => {
+  const actionId = body.actions[0].action_id;
+  const customStatus = {} as CustomStatus;
+  if (actionId === 'clock-in' || actionId === 'break-end') {
+    customStatus.status_text = 'on duty';
+    customStatus.status_emoji = ':desktop_computer:';
+    customStatus.status_expiration = 0;
+  } else if (actionId === 'break-start') {
+    customStatus.status_text = 'on break';
+    customStatus.status_emoji = ':coffee:';
+    customStatus.status_expiration = 0;
+  } else {
+    customStatus.status_text = '';
+    customStatus.status_emoji = '';
+    customStatus.status_expiration = 0;
+  }
+  console.log('customStatus', customStatus);
+  // status を変更
+  const statusChangeResult = await app.client.users.profile.set({
+    token: context.userToken,
+    profile: JSON.stringify(customStatus),
+  });
+  console.log('statusChangeResult', statusChangeResult);
 };
 
 // Check the details of the error to handle cases where you should retry sending a message or stop the app
