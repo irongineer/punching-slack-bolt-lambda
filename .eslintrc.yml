@@ -3,12 +3,10 @@ root: true
 extends:
   - eslint:recommended
   - plugin:@typescript-eslint/recommended
-  - plugin:@typescript-eslint/eslint-recommended",
   - prettier
   - plugin:prettier/recommended
   - prettier/@typescript-eslint
   - plugin:react/recommended
-  - plugin:jest/recommended
 parser: '@typescript-eslint/parser'
 parserOptions:
   project: ./tsconfig.json
@@ -19,8 +17,6 @@ parserOptions:
 plugins:
   - '@typescript-eslint'
   - react
-  - react-native
-  - jest
 settings:
   react:
     version: detect
