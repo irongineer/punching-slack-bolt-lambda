@@ -40,4 +40,7 @@ module.exports = {
       cwd: process.cwd(),
     }),
   ],
+  stats: {
+    warningsFilter: w => w !== 'CriticalDependenciesWarning',
+  },
 };
