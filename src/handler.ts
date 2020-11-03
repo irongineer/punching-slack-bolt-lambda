@@ -1,3 +1,4 @@
+/* eslint-disable no-console */
 import { APIGatewayEvent, Context as LambdaContext } from 'aws-lambda';
 import * as awsServerlessExpress from 'aws-serverless-express';
 import {
@@ -39,6 +40,7 @@ const processBeforeResponse = true;
 // Bolt App Initialization
 // ------------------------
 const expressReceiver = new ExpressReceiver({
+  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   signingSecret: process.env.SLACK_SIGNING_SECRET!,
   processBeforeResponse,
 });
@@ -62,14 +64,13 @@ const app = new App({
 app.shortcut<GlobalShortcut>(
   'clock',
   async ({ ack, context, body, logger }) => {
-    console.log("app.shortcut('clock')");
+    logger.info("app.shortcut('clock')");
 
     try {
       await openTimeRecordTypesModal(body, context);
       await ack();
     } catch (e) {
       logger.error(e);
-      console.error(`:x: Failed to post a message (error: ${e})`);
       await ack();
     }
   },
@@ -80,7 +81,7 @@ app.shortcut<GlobalShortcut>(
 app.action<BlockAction<ButtonAction>>(
   /^(clock-in|clock-out|break-start|break-end)/,
   async ({ ack, body, context, logger }) => {
-    console.log("app.action('clock-in'clock-out|break-start|break-end)");
+    logger.info("app.action('clock-in|clock-out|break-start|break-end)");
 
     // 打刻APIの呼び出し（モック）
     const clockRecordType = body.actions[0].value;
@@ -93,7 +94,7 @@ app.action<BlockAction<ButtonAction>>(
     // get user info of user who reacted to this message
     const user = body.user;
 
-    console.log('user', user);
+    logger.info('user', user);
 
     // formatting the user's name to mention that user in the message (see: https://api.slack.com/messaging/composing/formatting)
     let name = '';
@@ -106,25 +107,43 @@ app.action<BlockAction<ButtonAction>>(
       clientTime: clientTime,
       user: name,
     };
-    console.log('timeRecord', timeRecord);
+    logger.info('timeRecord', timeRecord);
+
+    const payload = payloads.message(timeRecord);
+
+    // post time record message to the user clocked
+    try {
+      await app.client.chat.postMessage({
+        token: context.botToken,
+        channel: user.id,
+        text: payload.blocks[0].text.text,
+      });
+      await ack();
+    } catch (e) {
+      logger.error(`:x: Failed to post a message (error: ${e})`);
+      await ack();
+    }
 
     try {
       // 打刻種別によってカスタムステータスを決定
       await changeCustomStatusByTimeRecordType(body, context);
 
       // モーダルビューを更新
-      const modalUpdateResult = await app.client.views.update({
-        token: context.botToken,
-        // リクエストに含まれる view_id を渡す
-        view_id: body.view!.id,
-        // 更新された view の値をペイロードに含む
-        view: payloads.timeRecord(timeRecord),
-      });
-      console.log('modalUpdateResult', modalUpdateResult);
-      await ack();
+      if (body.view) {
+        const modalUpdateResult = await app.client.views.update({
+          token: context.botToken,
+          // リクエストに含まれる view_id を渡す
+          view_id: body.view.id,
+          // 更新された view の値をペイロードに含む
+          view: payloads.timeRecord(timeRecord),
+        });
+        logger.info('modalUpdateResult', modalUpdateResult);
+        await ack();
+      } else {
+        throw new Error('Missing body.view!');
+      }
     } catch (e) {
-      logger.error(e);
-      console.error(`:x: Failed to post a message (error: ${e})`);
+      logger.error(`:x: Failed to post a message (error: ${e})`);
       await ack();
     }
   },
@@ -133,20 +152,19 @@ app.action<BlockAction<ButtonAction>>(
 app.view<ViewSubmitActionWithResponseUrls>(
   'time_record_share',
   async ({ view, body, context, ack, logger }) => {
-    console.log("app.view('time_record_share')");
+    logger.info("app.view('time_record_share')");
+    logger.info('body: ', body);
+    logger.info('context: ', context);
     // parse timeRecord data stored in views metadata
     const timeRecord = JSON.parse(view.private_metadata);
     const payload = payloads.message(timeRecord);
 
     // get the response url for the selected channel and post to it
     try {
-      body.response_urls.forEach(async url => {
-        await app.client.chat.postMessage({
-          token: context.botToken,
-          channel: url.channel_id,
-          text: payload.blocks[0].text.text,
-        });
-        // await axios.post(url.response_url, payload);
+      await app.client.chat.postMessage({
+        token: context.botToken,
+        channel: body.response_urls[0].channel_id,
+        text: payload.blocks[0].text.text,
       });
 
       // clear all open views after user shares to channel
@@ -154,8 +172,7 @@ app.view<ViewSubmitActionWithResponseUrls>(
         response_action: 'clear',
       });
     } catch (e) {
-      logger.error(e);
-      console.error(`:x: Failed to post a message (error: ${e})`);
+      logger.error(`:x: Failed to post a message (error: ${e})`);
       await ack();
     }
   },
@@ -166,8 +183,7 @@ app.command('/clock', async ({ context, body, logger, ack }) => {
     await openTimeRecordTypesModal(body, context);
     await ack();
   } catch (e) {
-    logger.error(e);
-    console.error(`:x: Failed to post a message (error: ${e})`);
+    logger.error(`:x: Failed to post a message (error: ${e})`);
     await ack();
   }
 });
@@ -181,8 +197,7 @@ app.command('/echo_me ', async ({ body, context, logger, ack }) => {
     });
     await ack();
   } catch (e) {
-    logger.error(e);
-    console.error(`:x: Failed to post a message (error: ${e})`);
+    logger.error(`:x: Failed to post a message (error: ${e})`);
     await ack();
   }
 });
@@ -247,7 +262,6 @@ const changeCustomStatusByTimeRecordType = async (
     customStatus.status_emoji = '';
     customStatus.status_expiration = 0;
   }
-  console.log('customStatus', customStatus);
   // status を変更
   const statusChangeResult = await app.client.users.profile.set({
     token: context.userToken,
