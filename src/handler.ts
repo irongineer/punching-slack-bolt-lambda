@@ -8,11 +8,11 @@ import {
   LogLevel,
   CodedError,
   BlockAction,
+  Button,
   ButtonAction,
   GlobalShortcut,
   SlashCommand,
 } from '@slack/bolt';
-import { Button } from '@slack/types';
 import { payloads } from './payloads';
 import * as helpers from './helpers';
 
