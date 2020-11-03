@@ -15,7 +15,8 @@ serverless create \
 #   - Create a Slash Command named `/clock` in 'Slash Commands' tab (Request URL can be a dummy)
 #   - Create a Global Shortcut named `Clock Time Record` and Callback ID `clock` in 'Interactivity & Shortcuts' tab (Request URL can be a dummy)
 #   - Create a bot user @{bot-name} in 'App Home' Tab
-#   - Add user scope `profile:write` in 'OAuth & Permissions' tab
+#   - Add bot scopes `chat:write` in 'OAuth & Permissions' tab
+#   - Add user scopes `profile:write` in 'OAuth & Permissions' tab
 #   - Install the app to your workspace in 'OAuth & Permissions' tab
 #   - Get Environment Variables from 'Basic Information' and 'OAuth & Permissions' tab
 
@@ -39,8 +40,15 @@ ngrok http 3000 # on another terminal window
 # ex) https://xxxxxxxxxxx.ngrok.io/dev/slack/events
 
 # 4) Make sure it works on Slack
-#  `Clock Time Record` on Global Shortcuts
-#  `/clock` on Slash Commands
+#  1. Add app to a target channel for sharing punching
+#  2. Try punching commands below
+#  - `Clock Time Record` on Global Shortcuts
+#  - `/clock` on Slash Commands
+#  3. Check it works
+#  - Open the punching modal
+#  - Punch a time record you clicked action button
+#  - Change to the status according to the selected time record type
+#  - Share your time record to the channel you selected
 
 # 5) Deploy to AWS
 export AWS_ACCESS_KEY_ID=xxx
