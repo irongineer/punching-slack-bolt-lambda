@@ -48,6 +48,7 @@ ngrok http 3000 # on another terminal window
 #     - Open the punching modal
 #     - Punch a time record you clicked action button
 #     - Change to the status according to the selected time record type
+#     - Post your time record to you ad Direct Message
 #     - Share your time record to the channel you selected
 
 # 5) Deploy to AWS
