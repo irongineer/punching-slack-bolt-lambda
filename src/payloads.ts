@@ -4,57 +4,57 @@ const payloads: {
   resultTimeRecordTypes: {
     data: [
       {
-        tenantId: "time-clock",
-        id: "0001",
-        timeRecordType: "clock-in",
-        displayNameJa: "出社",
-        displayNameEn: "Clock in",
-        color: "primary",
+        tenantId: 'time-clock',
+        id: '0001',
+        timeRecordType: 'clock-in',
+        displayNameJa: '出社',
+        displayNameEn: 'Clock in',
+        color: 'primary',
       },
       {
-        tenantId: "time-clock",
-        id: "0002",
-        timeRecordType: "clock-out",
-        displayNameJa: "退社",
-        displayNameEn: "Clock out",
-        color: "danger",
+        tenantId: 'time-clock',
+        id: '0002',
+        timeRecordType: 'clock-out',
+        displayNameJa: '退社',
+        displayNameEn: 'Clock out',
+        color: 'danger',
       },
       {
-        tenantId: "time-clock",
-        id: "0003",
-        timeRecordType: "break-start",
-        displayNameJa: "休憩開始",
-        displayNameEn: "Break start",
-        color: "default",
+        tenantId: 'time-clock',
+        id: '0003',
+        timeRecordType: 'break-start',
+        displayNameJa: '休憩開始',
+        displayNameEn: 'Break start',
+        color: 'default',
       },
       {
-        tenantId: "time-clock",
-        id: "0004",
-        timeRecordType: "break-end",
-        displayNameJa: "休憩終了",
-        displayNameEn: "Break end",
-        color: "default",
+        tenantId: 'time-clock',
+        id: '0004',
+        timeRecordType: 'break-end',
+        displayNameJa: '休憩終了',
+        displayNameEn: 'Break end',
+        color: 'default',
       },
     ],
   },
   timeRecordTypeSelect: (context: any) => {
     return {
-      callback_id: "time_record_type_select",
-      type: "modal",
+      callback_id: 'time_record_type_select',
+      type: 'modal',
       title: {
-        type: "plain_text",
-        text: "Select Time Record Type",
+        type: 'plain_text',
+        text: 'Select Time Record Type',
         emoji: true,
       },
       close: {
-        type: "plain_text",
-        text: "Cancel",
+        type: 'plain_text',
+        text: 'Cancel',
         emoji: true,
       },
       blocks: [
         {
-          block_id: "timeRecordType",
-          type: "actions",
+          block_id: 'timeRecordType',
+          type: 'actions',
           elements: context,
         },
       ],
@@ -64,53 +64,53 @@ const payloads: {
     return {
       data: {
         timeRecordType: context,
-        clientTime: new Date().toLocaleString("ja"),
+        clientTime: new Date().toLocaleString('ja'),
       },
     };
   },
   timeRecord: (context: any) => {
     return {
-      callback_id: "time_record_share",
-      type: "modal",
+      callback_id: 'time_record_share',
+      type: 'modal',
       title: {
-        type: "plain_text",
-        text: "Clock Result",
+        type: 'plain_text',
+        text: 'Clock Result',
         emoji: true,
       },
       submit: {
-        type: "plain_text",
-        text: "Share",
+        type: 'plain_text',
+        text: 'Share',
         emoji: true,
       },
       close: {
-        type: "plain_text",
-        text: "Close",
+        type: 'plain_text',
+        text: 'Close',
         emoji: true,
       },
       blocks: [
         {
-          type: "section",
+          type: 'section',
           text: {
-            type: "mrkdwn",
+            type: 'mrkdwn',
             text: `:clock1: *${context.clientTime}*`,
           },
         },
         {
-          type: "section",
+          type: 'section',
           text: {
-            type: "mrkdwn",
+            type: 'mrkdwn',
             text: `${context.timeRecordType} time was recorded.`,
           },
         },
         {
-          block_id: "channel",
-          type: "input",
+          block_id: 'channel',
+          type: 'input',
           element: {
-            action_id: "data",
-            type: "conversations_select",
+            action_id: 'data',
+            type: 'conversations_select',
             placeholder: {
-              type: "plain_text",
-              text: "Select a channel",
+              type: 'plain_text',
+              text: 'Select a channel',
               emoji: true,
             },
             response_url_enabled: true,
@@ -120,8 +120,8 @@ const payloads: {
             },
           },
           label: {
-            type: "plain_text",
-            text: "Send to channel",
+            type: 'plain_text',
+            text: 'Send to channel',
             emoji: true,
           },
         },
@@ -133,9 +133,9 @@ const payloads: {
     return {
       blocks: [
         {
-          type: "section",
+          type: 'section',
           text: {
-            type: "mrkdwn",
+            type: 'mrkdwn',
             text: `:clock1: *${context.user} ${context.timeRecordType}* at ${context.clientTime}`,
           },
         },

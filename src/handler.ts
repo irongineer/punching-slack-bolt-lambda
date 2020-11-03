@@ -59,18 +59,21 @@ const app = new App({
 // ------------------------
 // Application Logic
 // ------------------------
-app.shortcut<GlobalShortcut>('clock', async ({ ack, context, body, logger }) => {
-  console.log("app.shortcut('clock')");
+app.shortcut<GlobalShortcut>(
+  'clock',
+  async ({ ack, context, body, logger }) => {
+    console.log("app.shortcut('clock')");
 
-  try {
-    await openTimeRecordTypesModal(body, context);
-    await ack();
-  } catch (e) {
-    logger.error(e);
-    console.error(`:x: Failed to post a message (error: ${e})`);
-    await ack();
-  }
-});
+    try {
+      await openTimeRecordTypesModal(body, context);
+      await ack();
+    } catch (e) {
+      logger.error(e);
+      console.error(`:x: Failed to post a message (error: ${e})`);
+      await ack();
+    }
+  },
+);
 
 // action_id: clock-in 等のボタンを押すイベントをリッスン
 // （そのボタンはモーダルビューの中にあるという想定）
@@ -127,33 +130,36 @@ app.action<BlockAction<ButtonAction>>(
   },
 );
 
-app.view<ViewSubmitActionWithResponseUrls>('time_record_share', async ({ view, body, context, ack, logger }) => {
-  console.log("app.view('time_record_share')");
-  // parse timeRecord data stored in views metadata
-  const timeRecord = JSON.parse(view.private_metadata);
-  const payload = payloads.message(timeRecord);
+app.view<ViewSubmitActionWithResponseUrls>(
+  'time_record_share',
+  async ({ view, body, context, ack, logger }) => {
+    console.log("app.view('time_record_share')");
+    // parse timeRecord data stored in views metadata
+    const timeRecord = JSON.parse(view.private_metadata);
+    const payload = payloads.message(timeRecord);
 
-  // get the response url for the selected channel and post to it
-  try {
-    body.response_urls.forEach(async url => {
-      await app.client.chat.postMessage({
-        token: context.botToken,
-        channel: url.channel_id,
-        text: payload.blocks[0].text.text,
+    // get the response url for the selected channel and post to it
+    try {
+      body.response_urls.forEach(async url => {
+        await app.client.chat.postMessage({
+          token: context.botToken,
+          channel: url.channel_id,
+          text: payload.blocks[0].text.text,
+        });
+        // await axios.post(url.response_url, payload);
       });
-      // await axios.post(url.response_url, payload);
-    });
 
-    // clear all open views after user shares to channel
-    await ack({
-      response_action: 'clear',
-    });
-  } catch (e) {
-    logger.error(e);
-    console.error(`:x: Failed to post a message (error: ${e})`);
-    await ack();
-  }
-});
+      // clear all open views after user shares to channel
+      await ack({
+        response_action: 'clear',
+      });
+    } catch (e) {
+      logger.error(e);
+      console.error(`:x: Failed to post a message (error: ${e})`);
+      await ack();
+    }
+  },
+);
 
 app.command('/clock', async ({ context, body, logger, ack }) => {
   try {
@@ -181,7 +187,10 @@ app.command('/echo_me ', async ({ body, context, logger, ack }) => {
   }
 });
 
-const openTimeRecordTypesModal = async (body: SlashCommand | GlobalShortcut, context: Context): Promise<void> => {
+const openTimeRecordTypesModal = async (
+  body: SlashCommand | GlobalShortcut,
+  context: Context,
+): Promise<void> => {
   // 打刻種別APIを呼び出し結果のモック
   const result = payloads.resultTimeRecordTypes;
 
@@ -201,7 +210,10 @@ const openTimeRecordTypesModal = async (body: SlashCommand | GlobalShortcut, con
     }
     return parsedItem;
   });
-  console.log('payloads.timeRecordTypeSelect(items)', payloads.timeRecordTypeSelect(items));
+  console.log(
+    'payloads.timeRecordTypeSelect(items)',
+    payloads.timeRecordTypeSelect(items),
+  );
 
   // モーダルを開く
   const modalViewResult = await app.client.views.open({
@@ -216,7 +228,10 @@ const printCompleteJSON = async (error: CodedError): Promise<void> => {
   console.error(JSON.stringify(error));
 };
 
-const changeCustomStatusByTimeRecordType = async (body: BlockAction<ButtonAction>, context: Context): Promise<void> => {
+const changeCustomStatusByTimeRecordType = async (
+  body: BlockAction<ButtonAction>,
+  context: Context,
+): Promise<void> => {
   const actionId = body.actions[0].action_id;
   const customStatus = {} as CustomStatus;
   if (actionId === 'clock-in' || actionId === 'break-end') {
