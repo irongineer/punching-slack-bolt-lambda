@@ -40,19 +40,19 @@ ngrok http 3000 # on another terminal window
 # ex) https://xxxxxxxxxxx.ngrok.io/dev/slack/events
 
 # 4) Make sure it works on Slack
-#  1. Add app to a target channel for sharing punching
-#  2. Try punching commands below
-#  - `Clock Time Record` on Global Shortcuts
-#  - `/clock` on Slash Commands
-#  3. Check it works
-#  - Open the punching modal
-#  - Punch a time record you clicked action button
-#  - Change to the status according to the selected time record type
-#  - Share your time record to the channel you selected
+#   1. Add app to a target channel for sharing punching
+#   2. Try punching commands below
+#     - `Clock Time Record` on Global Shortcuts
+#     - `/clock` on Slash Commands
+#   3. Check it works
+#     - Open the punching modal
+#     - Punch a time record you clicked action button
+#     - Change to the status according to the selected time record type
+#     - Share your time record to the channel you selected
 
 # 5) Deploy to AWS
-export AWS_ACCESS_KEY_ID=xxx
-export AWS_SECRET_ACCESS_KEY=yyy
+export AWS_ACCESS_KEY_ID=xxx  # Skip if you have already completed `aws configure`
+export AWS_SECRET_ACCESS_KEY=yyy  # Skip if you have already completed `aws configure`
 sls deploy
 
 # Update the Request URL for the 'Slash Commands' and 'Interactivity & Shortcuts' with the deployed AWS URL
