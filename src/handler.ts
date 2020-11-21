@@ -80,12 +80,15 @@ app.shortcut<GlobalShortcut>(
 // （そのボタンはモーダルビューの中にあるという想定）
 app.action<BlockAction<ButtonAction>>(
   /^(clock-in|clock-out|break-start|break-end)/,
-  async ({ ack, body, context, logger }) => {
+  async ({ ack, body, context, logger, action }) => {
     logger.info("app.action('clock-in|clock-out|break-start|break-end)");
-
+    logger.info('body', body);
+    logger.info('context', context);
+    logger.info('action', action);
     // 打刻APIの呼び出し（モック）
-    const clockRecordType = body.actions[0].value;
+    const clockRecordType = action.text.text;
     const clockResult = payloads.resultTimeRecord(clockRecordType);
+    logger.info('clockResult', clockResult);
 
     // parse clock result information from API response
     const recordedType = clockResult.data.timeRecordType;
@@ -109,14 +112,14 @@ app.action<BlockAction<ButtonAction>>(
     };
     logger.info('timeRecord', timeRecord);
 
-    const payload = payloads.message(timeRecord);
+    const messagePayload = payloads.message(timeRecord);
 
     // post time record message to the user clocked
     try {
       await app.client.chat.postMessage({
         token: context.botToken,
         channel: user.id,
-        text: payload.blocks[0].text.text,
+        text: messagePayload.blocks[0].text.text,
       });
       await ack();
     } catch (e) {
@@ -125,9 +128,6 @@ app.action<BlockAction<ButtonAction>>(
     }
 
     try {
-      // 打刻種別によってカスタムステータスを決定
-      await changeCustomStatusByTimeRecordType(body, context);
-
       // モーダルビューを更新
       if (body.view) {
         const modalUpdateResult = await app.client.views.update({
@@ -150,51 +150,21 @@ app.action<BlockAction<ButtonAction>>(
 );
 
 app.view<ViewSubmitActionWithResponseUrls>(
-  'time_record_share',
-  async ({ view, body, context, ack, logger }) => {
-    logger.info("app.view('time_record_share')");
+  'time_record_result',
+  async ({ body, context, ack, logger }) => {
+    logger.info("app.view('time_record_result')");
     logger.info('body: ', body);
     logger.info('context: ', context);
-    // parse timeRecord data stored in views metadata
-    const timeRecord = JSON.parse(view.private_metadata);
-    const payload = payloads.message(timeRecord);
 
-    // get the response url for the selected channel and post to it
-    try {
-      await app.client.chat.postMessage({
-        token: context.botToken,
-        channel: body.response_urls[0].channel_id,
-        text: payload.blocks[0].text.text,
-      });
-
-      // clear all open views after user shares to channel
-      await ack({
-        response_action: 'clear',
-      });
-    } catch (e) {
-      logger.error(`:x: Failed to post a message (error: ${e})`);
-      await ack();
-    }
+    await ack({
+      response_action: 'clear',
+    });
   },
 );
 
 app.command('/clock', async ({ context, body, logger, ack }) => {
   try {
     await openTimeRecordTypesModal(body, context);
-    await ack();
-  } catch (e) {
-    logger.error(`:x: Failed to post a message (error: ${e})`);
-    await ack();
-  }
-});
-
-app.command('/echo_me ', async ({ body, context, logger, ack }) => {
-  try {
-    await app.client.chat.postMessage({
-      token: context.botToken,
-      channel: body.channel_id,
-      text: 'Hello!!!',
-    });
     await ack();
   } catch (e) {
     logger.error(`:x: Failed to post a message (error: ${e})`);
@@ -216,7 +186,7 @@ const openTimeRecordTypesModal = async (
       action_id: item.timeRecordType,
       text: {
         type: 'plain_text',
-        text: item.displayNameEn,
+        text: item.displayNameJa,
       },
       value: item.timeRecordType,
     };

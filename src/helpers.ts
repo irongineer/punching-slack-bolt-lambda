@@ -19,4 +19,21 @@ function hasProperty<K extends string>(
   return x instanceof Object && name in x;
 }
 
-export { copy, getUrlWithParams, hasProperty };
+function getJstTime(): string {
+  const jstOffset = 9 * 60;
+  const now = new Date();
+  const offset = now.getTimezoneOffset() + jstOffset;
+  now.setTime(new Date().getTime() + offset * 60 * 1000);
+  const date = new Date(now);
+  return `${date.getFullYear()}年${
+    date.getMonth() + 1
+  }月${date.getDate()}日 ${zeroPadding(date.getHours())}:${zeroPadding(
+    date.getMinutes(),
+  )}:${zeroPadding(date.getSeconds())}`;
+}
+
+function zeroPadding(n: number): string {
+  return n < 10 ? `0${n}` : `${n}`;
+}
+
+export { copy, getUrlWithParams, hasProperty, getJstTime };
