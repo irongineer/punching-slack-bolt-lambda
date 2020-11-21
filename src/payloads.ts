@@ -1,3 +1,5 @@
+import { getJstTime } from './helpers';
+
 const payloads: {
   [key: string]: any;
 } = {
@@ -43,12 +45,12 @@ const payloads: {
       type: 'modal',
       title: {
         type: 'plain_text',
-        text: 'Select Time Record Type',
+        text: '打刻種別を選択',
         emoji: true,
       },
       close: {
         type: 'plain_text',
-        text: 'Cancel',
+        text: 'キャンセル',
         emoji: true,
       },
       blocks: [
@@ -64,27 +66,23 @@ const payloads: {
     return {
       data: {
         timeRecordType: context,
-        clientTime: new Date().toLocaleString('ja'),
+        clientTime: getJstTime(),
       },
     };
   },
   timeRecord: (context: any) => {
+    console.log('context', context);
     return {
-      callback_id: 'time_record_share',
+      callback_id: 'time_record_result',
       type: 'modal',
       title: {
         type: 'plain_text',
-        text: 'Clock Result',
-        emoji: true,
-      },
-      submit: {
-        type: 'plain_text',
-        text: 'Share',
+        text: '打刻結果',
         emoji: true,
       },
       close: {
         type: 'plain_text',
-        text: 'Close',
+        text: '終了',
         emoji: true,
       },
       blocks: [
@@ -99,30 +97,7 @@ const payloads: {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `${context.timeRecordType} time was recorded.`,
-          },
-        },
-        {
-          block_id: 'channel',
-          type: 'input',
-          element: {
-            action_id: 'data',
-            type: 'conversations_select',
-            placeholder: {
-              type: 'plain_text',
-              text: 'Select a channel',
-              emoji: true,
-            },
-            response_url_enabled: true,
-            default_to_current_conversation: true,
-            filter: {
-              exclude_bot_users: true,
-            },
-          },
-          label: {
-            type: 'plain_text',
-            text: 'Send to channel',
-            emoji: true,
+            text: `${context.timeRecordType}時刻を記録しました。`,
           },
         },
       ],
@@ -136,7 +111,7 @@ const payloads: {
           type: 'section',
           text: {
             type: 'mrkdwn',
-            text: `:clock1: *${context.user} ${context.timeRecordType}* at ${context.clientTime}`,
+            text: `:clock1: ${context.clientTime} ${context.user} *${context.timeRecordType}*`,
           },
         },
       ],
