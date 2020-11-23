@@ -16,6 +16,12 @@ import {
 } from '@slack/bolt';
 import { payloads } from './payloads';
 import * as helpers from './helpers';
+import {
+  scopes,
+  buildPutWorkspaceParams,
+  buildSlackInstallation,
+} from './shared/Workspace';
+import { putWorkspace, getWorkspaceByTenantId } from './shared/dao/workspace';
 
 interface ViewSubmitActionWithResponseUrls extends ViewSubmitAction {
   response_urls: ResponseUrlInfo[];
@@ -35,7 +41,6 @@ interface CustomStatus {
 }
 
 const processBeforeResponse = true;
-const token_database = {} as any;
 
 // ------------------------
 // Bolt App Initialization
@@ -46,20 +51,30 @@ const expressReceiver = new ExpressReceiver({
   clientId: process.env.SLACK_CLIENT_ID,
   clientSecret: process.env.SLACK_CLIENT_SECRET,
   stateSecret: 'my-state-secret',
-  scopes: ['commands'],
+  scopes,
   installationStore: {
     storeInstallation: async installation => {
-      // TODO: 実際のデータベースに保存するために、ここのコードを変更
       console.log('storeInstallation', installation);
-      token_database[installation.team.id] = installation;
-      console.log('token_database', token_database);
-      return Promise.resolve();
+      // TODO Get tenantId by teamId
+      const tenantId = installation.team.id; // Temporary
+      const workspace = buildPutWorkspaceParams({ tenantId, installation });
+      return await putWorkspace(workspace);
     },
     fetchInstallation: async installQuery => {
-      // TODO: 実際のデータベースから取得するために、ここのコードを変更
       console.log('fetchInstallation', installQuery);
-      const installation = token_database[installQuery.teamId];
-      return Promise.resolve(installation);
+      // TODO Get tenantId by teamId
+      const tenantId = installQuery.teamId; // Temporary
+      const workspace = await getWorkspaceByTenantId(
+        tenantId,
+        installQuery.teamId,
+      );
+      console.log('workspace', workspace);
+      if (!workspace) {
+        throw new Error('Failed to get workspace!');
+      }
+      const installation = buildSlackInstallation(workspace);
+      console.log('installation', installation);
+      return installation;
     },
   },
   processBeforeResponse,
@@ -133,7 +148,7 @@ app.action<BlockAction<ButtonAction>>(
         channel: user.id,
         text: messagePayload.blocks[0].text.text,
       });
-      await ack();
+      // await ack();
     } catch (e) {
       logger.error(`:x: Failed to post a message (error: ${e})`);
       await ack();

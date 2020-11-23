@@ -1,0 +1,16 @@
+Resources:
+  WorkspaceTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Workspace
+      AttributeDefinitions:
+        - AttributeName: tenantId
+          AttributeType: S
+        - AttributeName: id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: tenantId
+          KeyType: HASH
+        - AttributeName: id
+          KeyType: RANGE
+      BillingMode: PAY_PER_REQUEST
