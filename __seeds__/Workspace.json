@@ -7,7 +7,6 @@
     "appId": "A123",
     "botId": "B123",
     "botUserId": "U123",
-    "installUserId": "U999",
     "token": "xoxo0123",
     "scopes": ["scopeA, scopeB"]
   },
@@ -19,7 +18,6 @@
     "appId": "A456",
     "botId": "B456",
     "botUserId": "U456",
-    "installUserId": "U999",
     "token": "xoxo0456",
     "scopes": ["scopeA, scopeC"]
   }

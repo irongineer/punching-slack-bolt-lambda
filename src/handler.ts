@@ -6,6 +6,8 @@ import {
   ExpressReceiver,
   ViewSubmitAction,
   Context,
+  Middleware,
+  NextFn,
   LogLevel,
   CodedError,
   BlockAction,
@@ -13,6 +15,7 @@ import {
   ButtonAction,
   GlobalShortcut,
   SlashCommand,
+  Installation,
 } from '@slack/bolt';
 import { payloads } from './payloads';
 import * as helpers from './helpers';
@@ -21,7 +24,13 @@ import {
   buildPutWorkspaceParams,
   buildSlackInstallation,
 } from './shared/Workspace';
-import { putWorkspace, getWorkspaceByTenantId } from './shared/dao/workspace';
+import {
+  scopes as userScopes,
+  buildPutUserParams,
+  buildUserInstallation,
+} from './shared/User';
+import { putWorkspace, getWorkspaceByKey } from './shared/dao/workspace';
+import { putUser, getUserByKey } from './shared/dao/user';
 
 interface ViewSubmitActionWithResponseUrls extends ViewSubmitAction {
   response_urls: ResponseUrlInfo[];
@@ -45,7 +54,7 @@ const processBeforeResponse = true;
 // ------------------------
 // Bolt App Initialization
 // ------------------------
-const expressReceiver = new ExpressReceiver({
+const receiver = new ExpressReceiver({
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   signingSecret: process.env.SLACK_SIGNING_SECRET!,
   clientId: process.env.SLACK_CLIENT_ID,
@@ -55,24 +64,39 @@ const expressReceiver = new ExpressReceiver({
   installationStore: {
     storeInstallation: async installation => {
       console.log('storeInstallation', installation);
-      // TODO Get tenantId by teamId
+      // TODO Get tenantId and sub from DB by teamId and userId
       const tenantId = installation.team.id; // Temporary
+      const sub = installation.user.id; // Temporary
       const workspace = buildPutWorkspaceParams({ tenantId, installation });
-      return await putWorkspace(workspace);
+      const user = buildPutUserParams({ tenantId, sub, installation });
+      await Promise.all([putWorkspace(workspace), putUser(user)]);
+      return Promise.resolve();
     },
     fetchInstallation: async installQuery => {
       console.log('fetchInstallation', installQuery);
-      // TODO Get tenantId by teamId
+      // TODO Get tenantId and sub from DB by teamId and userId
       const tenantId = installQuery.teamId; // Temporary
-      const workspace = await getWorkspaceByTenantId(
+      const workspace = await getWorkspaceByKey(tenantId, installQuery.teamId);
+      const user = await getUserByKey(
         tenantId,
         installQuery.teamId,
+        installQuery.userId || '',
       );
       console.log('workspace', workspace);
+      console.log('user', user);
       if (!workspace) {
         throw new Error('Failed to get workspace!');
       }
-      const installation = buildSlackInstallation(workspace);
+      if (!user) {
+        throw new Error('Failed to get user!');
+      }
+      const workspaceInstallation = buildSlackInstallation(workspace);
+      const userInstallation = buildUserInstallation(user);
+      const installation: Installation = {
+        ...workspaceInstallation,
+        user: userInstallation,
+      };
+
       console.log('installation', installation);
       return installation;
     },
@@ -80,9 +104,30 @@ const expressReceiver = new ExpressReceiver({
   processBeforeResponse,
 });
 const app = new App({
-  receiver: expressReceiver,
+  receiver,
   processBeforeResponse,
   logLevel: LogLevel.DEBUG,
+});
+
+// ------------------------
+// Custom Route
+// ------------------------
+receiver.router.get('/slack/custom_install', async (_req, res, _next) => {
+  try {
+    // feel free to modify the scopes
+    const url = await receiver.installer?.generateInstallUrl({
+      scopes,
+      userScopes,
+      metadata: JSON.stringify({
+        tenantId: 'tenant-id',
+        state: 'sessionState',
+      }),
+    });
+
+    res.send(helpers.buildSlackUrl(url || ''));
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 // ------------------------
@@ -276,7 +321,7 @@ app.error(printCompleteJSON);
 // ------------------------
 // AWS Lambda Handler
 // ------------------------
-const server = awsServerlessExpress.createServer(expressReceiver.app);
+const server = awsServerlessExpress.createServer(receiver.app);
 module.exports.app = (event: APIGatewayEvent, context: LambdaContext) => {
   console.log('⚡️ Bolt app is running!');
 

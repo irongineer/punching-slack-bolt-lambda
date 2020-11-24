@@ -11,11 +11,9 @@ export default interface Workspace {
   appId: string;
   botId: string;
   botUserId: string;
-  installUserId: string;
   token: string;
   scopes: Scopes[];
 }
-
 interface BuildPutWorkspaceParams {
   tenantId: string;
   installation: Installation;
@@ -29,12 +27,11 @@ export const buildPutWorkspaceParams = ({
   return {
     tenantId,
     id: buildId({ tenantId, teamId }),
-    teamId: installation.team.id,
+    teamId,
     name: installation.team.name,
     appId: installation.appId || '',
     botId: installation.bot?.id || '',
     botUserId: installation.bot?.userId || '',
-    installUserId: installation.user.id,
     token: installation.bot?.token || '',
     scopes: installation.bot?.scopes || [],
   };
@@ -44,7 +41,7 @@ export const buildSlackInstallation = (workspace: Workspace): Installation => {
   return {
     team: { id: workspace.teamId, name: workspace.name },
     appId: workspace.appId,
-    user: { token: undefined, scopes: undefined, id: workspace.installUserId },
+    user: { id: '', token: undefined, scopes: undefined },
     bot: {
       scopes: workspace.scopes,
       token: workspace.token,

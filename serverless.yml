@@ -27,6 +27,8 @@ custom:
         sources:
           - table: Workspace
             sources: [./__seeds__/Workspace.json]
+          - table: User
+            sources: [./__seeds__/User.json]
   iamRoleStatements:
     xray:
       Effect: Allow
@@ -49,7 +51,8 @@ provider:
   timeout: 30
   environment:
     STAGE: ${self:provider.stage}
-    DYNAMODB_TABLE: Workspace
+    WORKSPACE_TABLE: Workspace
+    USER_TABLE: User
   iamRoleStatements:
     - ${self:custom.iamRoleStatements.xray}
     - Effect: Allow
@@ -64,7 +67,9 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+      Resource:
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.WORKSPACE_TABLE}"
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.USER_TABLE}"
   logs:
     restApi:
       accessLogging: true
@@ -80,6 +85,9 @@ functions:
           method: post
       - http:
           path: /slack/install
+          method: get
+      - http:
+          path: /slack/custom_install
           method: get
       - http:
           path: /slack/oauth_redirect

@@ -17,7 +17,7 @@ export const putWorkspace = async (workspace: Workspace): Promise<void> => {
   }
 };
 
-export const getWorkspaceByTenantId = async (
+export const getWorkspaceByKey = async (
   tenantId: string,
   teamId: string,
 ): Promise<Workspace | undefined> => {
