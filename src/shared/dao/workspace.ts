@@ -1,4 +1,4 @@
-import Workspace, { buildId } from '../Workspace';
+import Workspace from '../Workspace';
 import dynamodb from '../../dynamodb';
 
 const workspaceTable = 'Workspace';
@@ -18,14 +18,12 @@ export const putWorkspace = async (workspace: Workspace): Promise<void> => {
 };
 
 export const getWorkspaceByKey = async (
-  tenantId: string,
   teamId: string,
 ): Promise<Workspace | undefined> => {
-  const id = buildId({ tenantId, teamId });
   const ret = await dynamodb.doc
     .get({
       TableName: workspaceTable,
-      Key: { tenantId, id },
+      Key: { teamId },
       ConsistentRead: true,
     })
     .promise();

@@ -4,9 +4,8 @@ export const scopes = ['commands', 'chat:write'];
 export type Scopes = typeof scopes[number];
 
 export default interface Workspace {
-  tenantId: string;
-  id: string;
   teamId: string;
+  tenantId: string;
   name: string;
   appId: string;
   botId: string;
@@ -25,9 +24,8 @@ export const buildPutWorkspaceParams = ({
 }: BuildPutWorkspaceParams): Workspace => {
   const teamId = installation.team.id;
   return {
-    tenantId,
-    id: buildId({ tenantId, teamId }),
     teamId,
+    tenantId,
     name: installation.team.name,
     appId: installation.appId || '',
     botId: installation.bot?.id || '',
@@ -50,13 +48,4 @@ export const buildSlackInstallation = (workspace: Workspace): Installation => {
     },
     tokenType: 'bot',
   };
-};
-
-interface BuildIdParams {
-  tenantId: string;
-  teamId: string;
-}
-
-export const buildId = ({ tenantId, teamId }: BuildIdParams): string => {
-  return `slack::${tenantId}::${teamId}`;
 };

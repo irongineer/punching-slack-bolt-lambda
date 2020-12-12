@@ -1,4 +1,4 @@
-import User, { buildId } from '../User';
+import User from '../User';
 import dynamodb from '../../dynamodb';
 
 const userTable = 'User';
@@ -18,15 +18,13 @@ export const putUser = async (user: User): Promise<void> => {
 };
 
 export const getUserByKey = async (
-  tenantId: string,
   teamId: string,
   userId: string,
 ): Promise<User | undefined> => {
-  const id = buildId({ tenantId, teamId, userId });
   const ret = await dynamodb.doc
     .get({
       TableName: userTable,
-      Key: { tenantId, id },
+      Key: { teamId, userId },
       ConsistentRead: true,
     })
     .promise();

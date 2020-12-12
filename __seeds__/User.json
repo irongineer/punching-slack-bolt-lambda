@@ -1,18 +1,16 @@
 [
   {
-    "tenantId": "t123",
-    "id": "slack::t123::T123::U123",
     "teamId": "T123",
     "userId": "U123",
+    "tenantId": "t123",
     "sub": "U123",
     "token": "xoxo0123",
     "scopes": ["scopeA, scopeB"]
   },
   {
-    "tenantId": "t456",
-    "id": "slack::t123::T123::U123",
     "teamId": "T456",
     "userId": "U456",
+    "tenantId": "t456",
     "sub": "U456",
     "token": "xoxo0456",
     "scopes": ["scopeA, scopeC"]

@@ -72,11 +72,8 @@ const receiver = new ExpressReceiver({
     },
     fetchInstallation: async installQuery => {
       console.log('fetchInstallation', installQuery);
-      // TODO Get tenantId and sub from DB by teamId and userId
-      const tenantId = installQuery.teamId; // Temporary
-      const workspace = await getWorkspaceByKey(tenantId, installQuery.teamId);
+      const workspace = await getWorkspaceByKey(installQuery.teamId);
       const user = await getUserByKey(
-        tenantId,
         installQuery.teamId,
         installQuery.userId || '',
       );

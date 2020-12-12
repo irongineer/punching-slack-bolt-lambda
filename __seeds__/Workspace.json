@@ -1,8 +1,7 @@
 [
   {
-    "tenantId": "t123",
-    "id": "slack::t123::T123",
     "teamId": "T123",
+    "tenantId": "t123",
     "name": "Workspace 1",
     "appId": "A123",
     "botId": "B123",
@@ -11,9 +10,8 @@
     "scopes": ["scopeA, scopeB"]
   },
   {
-    "tenantId": "t456",
-    "id": "slack::t123::T456",
     "teamId": "T456",
+    "tenantId": "t456",
     "name": "Workspace 2",
     "appId": "A456",
     "botId": "B456",

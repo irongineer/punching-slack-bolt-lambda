@@ -4,10 +4,9 @@ export const scopes = ['users.profile:write'];
 export type Scopes = typeof scopes[number];
 
 export default interface User {
-  tenantId: string;
-  id: string;
   teamId: string;
   userId: string;
+  tenantId: string;
   sub: string;
   token: string;
   scopes: Scopes[];
@@ -33,10 +32,9 @@ export const buildPutUserParams = ({
   const teamId = installation.team.id;
   const userId = installation.user.id;
   return {
-    tenantId,
-    id: buildId({ tenantId, teamId, userId }),
     teamId,
     userId,
+    tenantId,
     sub,
     token: installation.user?.token || '',
     scopes: installation.user?.scopes || [],
@@ -44,23 +42,9 @@ export const buildPutUserParams = ({
 };
 
 export const buildUserInstallation = ({
-  id,
+  userId,
   token,
   scopes,
 }: User): UserInstallation => {
-  return { id, token, scopes };
-};
-
-interface BuildIdParams {
-  tenantId: string;
-  teamId: string;
-  userId: string;
-}
-
-export const buildId = ({
-  tenantId,
-  teamId,
-  userId,
-}: BuildIdParams): string => {
-  return `slack::${tenantId}::${teamId}::${userId}`;
+  return { id: userId, token, scopes };
 };
