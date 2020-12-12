@@ -29,6 +29,7 @@ import {
 } from './shared/User';
 import { putWorkspace, getWorkspaceByKey } from './shared/dao/workspace';
 import { putUser, getUserByKey } from './shared/dao/user';
+import findUser from './shared/middleware/findUser';
 
 interface ViewSubmitActionWithResponseUrls extends ViewSubmitAction {
   response_urls: ResponseUrlInfo[];
@@ -87,7 +88,7 @@ const receiver = new ExpressReceiver({
       }
       const workspaceInstallation = buildSlackInstallation(workspace);
       const userInstallation = buildUserInstallation(user);
-      const installation: Installation = {
+      const installation: Installation<'v2', false> = {
         ...workspaceInstallation,
         user: userInstallation,
       };

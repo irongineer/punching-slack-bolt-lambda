@@ -21,7 +21,7 @@
     "lint:fix": "npm-run-all eslint:fix check-types format"
   },
   "dependencies": {
-    "@slack/bolt": "^2.4.1",
+    "@slack/bolt": "^2.5.0",
     "aws-sdk": "^2.784.0",
     "aws-serverless-express": "^3.3.8",
     "aws-xray-sdk": "^3.2.0"

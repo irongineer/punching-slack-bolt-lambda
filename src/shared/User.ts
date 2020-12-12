@@ -1,6 +1,6 @@
 import { Installation } from '@slack/bolt';
 
-export const scopes = ['users.profile:write'];
+export const scopes = ['users.profile:write']; // Specify Slack user scopes to request when users install your app.
 export type Scopes = typeof scopes[number];
 
 export default interface User {
@@ -29,8 +29,11 @@ export const buildPutUserParams = ({
   sub,
   installation,
 }: BuildPutUserParams): User => {
-  const teamId = installation.team.id;
+  const teamId = installation.team?.id;
   const userId = installation.user.id;
+  if (!teamId) {
+    throw new Error('Not support Org installation!');
+  }
   return {
     teamId,
     userId,
