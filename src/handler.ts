@@ -60,6 +60,21 @@ const receiver = new ExpressReceiver({
   clientSecret: process.env.SLACK_CLIENT_SECRET,
   stateSecret: 'my-state-secret',
   scopes,
+  installerOptions: {
+    authVersion: 'v2', // default value
+    metadata: 'some session data', // sample data
+    installPath: '/slack/install', // default value
+    redirectUriPath: '/slack/oauth_redirect', // default value
+    callbackOptions: {
+      success: (_instalation, _installOptions, _req, res) => {
+        res.send('sucessful!');
+      },
+      failure: (_error, _installOptions, _req, res) => {
+        res.send('failure');
+      },
+    },
+    userScopes,
+  },
   installationStore: {
     storeInstallation: async installation => {
       console.log('storeInstallation', installation);
