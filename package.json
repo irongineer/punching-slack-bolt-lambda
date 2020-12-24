@@ -7,7 +7,7 @@
     "postinstall": "npm-run-all install:*",
     "install:dynamodb": "sls dynamodb install",
     "start": "yarn build && yarn serve",
-    "build": "sls package --stage ${STAGE:-dev}",
+    "build": "source .env && sls package --stage ${STAGE:-dev}",
     "serve": "source .env && npm-run-all start:offline",
     "start:offline": "NODE_OPTIONS=--max-old-space-size=4096 IS_OFFLINE=true sls offline start --noTimeout -v",
     "deploy": "source .env && sls deploy --stage ${STAGE:-dev} --force",
