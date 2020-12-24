@@ -7,16 +7,16 @@ Sample project to run slack framework bolt with Typescript on AWS Lambda managed
 # 0) Create a new project with this template
 yarn global add serverless
 serverless create \
-  --template-url https://github.com/irongineer/punching-slack-bolt-lambda/tree/oauth-install \
+  --template-url https://github.com/irongineer/punching-slack-bolt-lambda/tree/develop \
   --path punching-slack-bolt-lambda
 
 # 1) Slack App Configuration
 # Go to https://api.slack.com/apps
 #   - Create a Slash Command named `/clock` in 'Slash Commands' tab (Request URL can be a dummy)
 #   - Create a Global Shortcut named `Clock Time Record` and Callback ID `clock` in 'Interactivity & Shortcuts' tab (Request URL can be a dummy)
-#   - Add a Redirect Url in 'OAuth & Permissions' tab (Redirect URL can be a dummy)
-#   - Create a bot user @{bot-name} in 'App Home' Tab
-#   - Click the Activate Public Distribution button in 'Manage distribution' tab (cf. https://api.slack.com/start/distributing/public#enabling)
+#   - Add a Redirect Url in 'OAuth & Permissions' tab (Redirect URL can be a dummy) ** DON"T forget to click `Save URLs` button! **
+#   - Create a bot user @{bot-name} by clicking `Edit` button of `App Display Name` and input your Bot name in 'App Home' Tab
+#   - Click the Activate Public Distribution button in 'Manage distribution' tab after check "Remove Hard Coded Information" (cf. https://api.slack.com/start/distributing/public#enabling)
 #   - Get Environment Variables from 'Basic Information' tab
 
 # 2) App Setup
@@ -26,7 +26,6 @@ cp _env .env
 vi .env
 # Set Environment Variables
 #   - SLACK_SIGNING_SECRET
-#   - SLACK_APP_ID
 #   - SLACK_CLIENT_ID
 #   - SLACK_CLIENT_SECRET
 source .env
@@ -37,10 +36,10 @@ ngrok http 3000 # on another terminal window
 
 # Update the Request URL for the 'Slash Commands' and 'Interactivity & Shortcuts' with the ngrok URL
 # ex) https://xxxxxxxxxxx.ngrok.io/dev/slack/events
-# Update the Request URL for the 'Install' with the ngrok URL
-# ex) https://xxxxxxxxxxx.ngrok.io/dev/slack/install
 # Update the Redirect URL for the 'Redirect URLs' with the ngrok URL
 # ex) https://xxxxxxxxxxx.ngrok.io/dev/slack/oauth_redirect
+# Update the Request URL for the 'Install' with the ngrok URL
+# ex) https://xxxxxxxxxxx.ngrok.io/dev/slack/install
 
 # 4) Make sure it works on Slack
 #  Install your app from `Add to Slack` button by accessing `/slack/install` endpoint
@@ -64,8 +63,8 @@ sls deploy
 
 # Update the Request URL for the 'Slash Commands' and 'Interactivity & Shortcuts' with the deployed AWS URL
 # ex) https://xxxxxxxxxx.execute-api.ap-northeast-1.amazonaws.com/dev/slack/events
-# Update the Request URL for the 'Install' with the deployed AWS URL
-# ex) https://xxxxxxxxxx.execute-api.ap-northeast-1.amazonaws.com/dev/slack/install
 # Update the Redirect URL for the 'Redirect URLs' with the deployed AWS URL
 # ex) https://xxxxxxxxxx.execute-api.ap-northeast-1.amazonaws.com/dev/slack/oauth_redirect
+# Update the Request URL for the 'Install' with the deployed AWS URL
+# ex) https://xxxxxxxxxx.execute-api.ap-northeast-1.amazonaws.com/dev/slack/install
 ```
