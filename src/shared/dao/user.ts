@@ -1,7 +1,7 @@
 import User from '../User';
 import dynamodb from '../../dynamodb';
 
-const userTable = 'User';
+const userTable = 'SlackUser';
 
 export const putUser = async (user: User): Promise<void> => {
   try {

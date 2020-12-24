@@ -25,9 +25,9 @@ custom:
     seed:
       development:
         sources:
-          - table: Workspace
+          - table: SlackWorkspace
             sources: [./__seeds__/Workspace.json]
-          - table: User
+          - table: SlackUser
             sources: [./__seeds__/User.json]
   iamRoleStatements:
     xray:
@@ -51,8 +51,8 @@ provider:
   timeout: 30
   environment:
     STAGE: ${self:provider.stage}
-    WORKSPACE_TABLE: Workspace
-    USER_TABLE: User
+    WORKSPACE_TABLE: SlackWorkspace
+    USER_TABLE: SlackUser
   iamRoleStatements:
     - ${self:custom.iamRoleStatements.xray}
     - Effect: Allow

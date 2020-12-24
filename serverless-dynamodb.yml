@@ -2,7 +2,7 @@ Resources:
   WorkspaceTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: Workspace
+      TableName: SlackWorkspace
       AttributeDefinitions:
         - AttributeName: teamId
           AttributeType: S
@@ -13,7 +13,7 @@ Resources:
   UserTable:
     Type: AWS::DynamoDB::Table
     Properties:
-      TableName: User
+      TableName: SlackUser
       AttributeDefinitions:
         - AttributeName: teamId
           AttributeType: S

@@ -1,7 +1,7 @@
 import Workspace from '../Workspace';
 import dynamodb from '../../dynamodb';
 
-const workspaceTable = 'Workspace';
+const workspaceTable = 'SlackWorkspace';
 
 export const putWorkspace = async (workspace: Workspace): Promise<void> => {
   try {
