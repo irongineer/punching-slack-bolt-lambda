@@ -13,9 +13,23 @@ import {
   ButtonAction,
   GlobalShortcut,
   SlashCommand,
+  Installation,
 } from '@slack/bolt';
 import { payloads } from './payloads';
 import * as helpers from './helpers';
+import {
+  scopes,
+  buildPutWorkspaceParams,
+  buildSlackInstallation,
+} from './shared/Workspace';
+import {
+  scopes as userScopes,
+  buildPutUserParams,
+  buildUserInstallation,
+} from './shared/User';
+import { putWorkspace, getWorkspaceByKey } from './shared/dao/workspace';
+import { putUser, getUserByKey } from './shared/dao/user';
+import findUser from './shared/middleware/findUser';
 
 interface ViewSubmitActionWithResponseUrls extends ViewSubmitAction {
   response_urls: ResponseUrlInfo[];
@@ -39,23 +53,92 @@ const processBeforeResponse = true;
 // ------------------------
 // Bolt App Initialization
 // ------------------------
-const expressReceiver = new ExpressReceiver({
+const receiver = new ExpressReceiver({
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   signingSecret: process.env.SLACK_SIGNING_SECRET!,
+  clientId: process.env.SLACK_CLIENT_ID,
+  clientSecret: process.env.SLACK_CLIENT_SECRET,
+  stateSecret: 'my-state-secret',
+  scopes,
+  installerOptions: {
+    authVersion: 'v2', // default value
+    metadata: 'some session data', // sample data
+    installPath: '/slack/install', // default value
+    redirectUriPath: '/slack/oauth_redirect', // default value
+    callbackOptions: {
+      success: (_instalation, _installOptions, _req, res) => {
+        res.send('sucessful!');
+      },
+      failure: (_error, _installOptions, _req, res) => {
+        res.send('failure');
+      },
+    },
+    userScopes,
+  },
+  installationStore: {
+    storeInstallation: async installation => {
+      console.log('storeInstallation', installation);
+      // TODO Get tenantId and sub from DB by teamId and userId
+      const tenantId = installation.team.id; // Temporary
+      const sub = installation.user.id; // Temporary
+      const workspace = buildPutWorkspaceParams({ tenantId, installation });
+      const user = buildPutUserParams({ tenantId, sub, installation });
+      await Promise.all([putWorkspace(workspace), putUser(user)]);
+      return Promise.resolve();
+    },
+    fetchInstallation: async installQuery => {
+      console.log('fetchInstallation', installQuery);
+      const workspace = await getWorkspaceByKey(installQuery.teamId);
+      const user = await getUserByKey(
+        installQuery.teamId,
+        installQuery.userId || '',
+      );
+      console.log('workspace', workspace);
+      console.log('user', user);
+      if (!workspace) {
+        throw new Error('Failed to get workspace!');
+      }
+      if (!user) {
+        throw new Error('Failed to get user!');
+      }
+      const workspaceInstallation = buildSlackInstallation(workspace);
+      const userInstallation = buildUserInstallation(user);
+      const installation: Installation<'v2', false> = {
+        ...workspaceInstallation,
+        user: userInstallation,
+      };
+
+      console.log('installation', installation);
+      return installation;
+    },
+  },
   processBeforeResponse,
 });
 const app = new App({
-  // If you don't use userToken, you need only botToken without authorize method
-  authorize: () => {
-    return Promise.resolve({
-      botId: process.env.SLACK_APP_ID,
-      botToken: process.env.SLACK_BOT_TOKEN,
-      userToken: process.env.SLACK_USER_TOKEN,
-    });
-  },
-  receiver: expressReceiver,
+  receiver,
   processBeforeResponse,
   logLevel: LogLevel.DEBUG,
+});
+
+// ------------------------
+// Custom Route
+// ------------------------
+receiver.router.get('/slack/custom_install', async (_req, res, _next) => {
+  try {
+    // feel free to modify the scopes
+    const url = await receiver.installer?.generateInstallUrl({
+      scopes,
+      userScopes,
+      metadata: JSON.stringify({
+        tenantId: 'tenant-id',
+        state: 'sessionState',
+      }),
+    });
+
+    res.send(helpers.buildSlackUrl(url || ''));
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 // ------------------------
@@ -121,13 +204,16 @@ app.action<BlockAction<ButtonAction>>(
         channel: user.id,
         text: messagePayload.blocks[0].text.text,
       });
-      await ack();
+      // await ack();
     } catch (e) {
       logger.error(`:x: Failed to post a message (error: ${e})`);
       await ack();
     }
 
     try {
+      // 打刻種別によってカスタムステータスを決定
+      // await changeCustomStatusByTimeRecordType(body, context);
+
       // モーダルビューを更新
       if (body.view) {
         const modalUpdateResult = await app.client.views.update({
@@ -246,7 +332,7 @@ app.error(printCompleteJSON);
 // ------------------------
 // AWS Lambda Handler
 // ------------------------
-const server = awsServerlessExpress.createServer(expressReceiver.app);
+const server = awsServerlessExpress.createServer(receiver.app);
 module.exports.app = (event: APIGatewayEvent, context: LambdaContext) => {
   console.log('⚡️ Bolt app is running!');
 
