@@ -117,6 +117,104 @@ const payloads: {
       ],
     };
   },
+  connectStart: (url: string) => {
+    return {
+      type: 'modal',
+      title: {
+        type: 'plain_text',
+        text: 'アカウント連携',
+        emoji: true,
+      },
+      close: {
+        type: 'plain_text',
+        text: '閉じる',
+        emoji: true,
+      },
+      blocks: [
+        {
+          type: 'section',
+          text: {
+            type: 'mrkdwn',
+            text: 'ご利用を開始するために、まずアカウント連携をしてください。',
+          },
+        },
+        {
+          type: 'actions',
+          elements: [
+            {
+              type: 'button',
+              text: {
+                type: 'plain_text',
+                text: '連携',
+                emoji: true,
+              },
+              value: 'connect',
+              url,
+              action_id: 'connect_account',
+              style: 'primary',
+            },
+          ],
+        },
+      ],
+    };
+  },
+  connectLoading: {
+    type: 'modal',
+    title: {
+      type: 'plain_text',
+      text: 'アカウント連携',
+      emoji: true,
+    },
+    close: {
+      type: 'plain_text',
+      text: '閉じる',
+      emoji: true,
+    },
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text: ':hourglass_flowing_sand: 連携中・・・',
+        },
+      },
+    ],
+  },
+  connectDone: {
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text:
+            'アカウント連携が完了しました。ショートカットから機能をご利用ください。',
+        },
+      },
+    ],
+  },
+  connectFailed: {
+    type: 'modal',
+    title: {
+      type: 'plain_text',
+      text: 'アカウント連携エラー',
+      emoji: true,
+    },
+    close: {
+      type: 'plain_text',
+      text: '閉じる',
+      emoji: true,
+    },
+    blocks: [
+      {
+        type: 'section',
+        text: {
+          type: 'mrkdwn',
+          text:
+            'アカウント連携できませんでした。アカウントを持っているにもかかわらず利用できない場合、システム管理者までご連絡ください。',
+        },
+      },
+    ],
+  },
 };
 
 export { payloads };
