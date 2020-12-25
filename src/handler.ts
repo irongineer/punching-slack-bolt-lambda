@@ -66,6 +66,7 @@ const receiver = new ExpressReceiver({
   installerOptions: {
     authVersion: 'v2', // default value
     metadata: 'some session data', // sample data
+    userScopes: [],
     installPath: '/slack/install', // default value
     redirectUriPath: '/slack/oauth_redirect', // default value
     callbackOptions: {
@@ -90,7 +91,6 @@ const receiver = new ExpressReceiver({
         res.send('Failure');
       },
     },
-    userScopes,
   },
   installationStore: {
     storeInstallation: async installation => {
@@ -139,7 +139,7 @@ const app = new App({
 // ------------------------
 // Custom Route
 // ------------------------
-receiver.router.get('/slack/custom_install', async (_req, res, _next) => {
+receiver.router.get('/slack/user_install', async (_req, res, _next) => {
   if (!receiver.installer) {
     throw new Error('Failed to get installer!');
   }

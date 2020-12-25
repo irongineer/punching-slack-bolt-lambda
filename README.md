@@ -39,10 +39,11 @@ ngrok http 3000 # on another terminal window
 # Update the Redirect URL for the 'Redirect URLs' with the ngrok URL
 # ex) https://xxxxxxxxxxx.ngrok.io/dev/slack/oauth_redirect
 # Update the Request URL for the 'Install' with the ngrok URL
-# ex) https://xxxxxxxxxxx.ngrok.io/dev/slack/install
+# ex.1) https://xxxxxxxxxxx.ngrok.io/dev/slack/install
+# ex.2) https://xxxxxxxxxxx.ngrok.io/dev/slack/user_install
 
 # 4) Make sure it works on Slack
-#  Install your app from `Add to Slack` button by accessing `/slack/install` endpoint
+#  Install your app from `Add to Slack` button by accessing `/slack/install` or /slack/user_install` endpoint
 #  Redirect to `/slack/oauth_redirect` endpoint after installing your app
 #  After install, check it works
 #   1. Add app to a target channel for sharing punching
@@ -66,5 +67,6 @@ sls deploy
 # Update the Redirect URL for the 'Redirect URLs' with the deployed AWS URL
 # ex) https://xxxxxxxxxx.execute-api.ap-northeast-1.amazonaws.com/dev/slack/oauth_redirect
 # Update the Request URL for the 'Install' with the deployed AWS URL
-# ex) https://xxxxxxxxxx.execute-api.ap-northeast-1.amazonaws.com/dev/slack/install
+# ex.1) https://xxxxxxxxxx.execute-api.ap-northeast-1.amazonaws.com/dev/slack/install
+# ex.2) https://xxxxxxxxxx.execute-api.ap-northeast-1.amazonaws.com/dev/slack/user_install
 ```
