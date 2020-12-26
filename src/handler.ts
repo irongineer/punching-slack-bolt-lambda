@@ -14,6 +14,8 @@ import {
   GlobalShortcut,
   SlashCommand,
   Installation,
+  SlackShortcutMiddlewareArgs,
+  SlackActionMiddlewareArgs,
 } from '@slack/bolt';
 import { payloads } from './payloads';
 import * as helpers from './helpers';
@@ -30,6 +32,7 @@ import {
 import { putWorkspace, getWorkspaceByKey } from './shared/dao/workspace';
 import { putUser, getUserByKey } from './shared/dao/user';
 import findUser from './shared/middleware/findUser';
+import connectAccount from './shared/middleware/connectAccount';
 
 interface ViewSubmitActionWithResponseUrls extends ViewSubmitAction {
   response_urls: ResponseUrlInfo[];
@@ -63,17 +66,31 @@ const receiver = new ExpressReceiver({
   installerOptions: {
     authVersion: 'v2', // default value
     metadata: 'some session data', // sample data
+    userScopes: [],
     installPath: '/slack/install', // default value
     redirectUriPath: '/slack/oauth_redirect', // default value
     callbackOptions: {
-      success: (_instalation, _installOptions, _req, res) => {
-        res.send('sucessful!');
+      success: async (instalation, _installOptions, _req, res) => {
+        if (instalation.team) {
+          await app.client.chat.postMessage({
+            token: instalation.bot?.token,
+            channel: instalation.user.id,
+            text: payloads.connectDone.blocks[0].text.text,
+          });
+          res.send(
+            helpers.buildRedirectButton(
+              instalation.team?.id,
+              instalation.appId || '',
+            ),
+          );
+        } else {
+          res.send('Success organization install!');
+        }
       },
       failure: (_error, _installOptions, _req, res) => {
-        res.send('failure');
+        res.send('Failure');
       },
     },
-    userScopes,
   },
   installationStore: {
     storeInstallation: async installation => {
@@ -98,11 +115,10 @@ const receiver = new ExpressReceiver({
       if (!workspace) {
         throw new Error('Failed to get workspace!');
       }
-      if (!user) {
-        throw new Error('Failed to get user!');
-      }
       const workspaceInstallation = buildSlackInstallation(workspace);
-      const userInstallation = buildUserInstallation(user);
+      const userInstallation = user
+        ? buildUserInstallation(user)
+        : { id: '', token: '', scopes: [] };
       const installation: Installation<'v2', false> = {
         ...workspaceInstallation,
         user: userInstallation,
@@ -123,17 +139,19 @@ const app = new App({
 // ------------------------
 // Custom Route
 // ------------------------
-receiver.router.get('/slack/custom_install', async (_req, res, _next) => {
+receiver.router.get('/slack/user_install', async (_req, res, _next) => {
+  if (!receiver.installer) {
+    throw new Error('Failed to get installer!');
+  }
   try {
     // feel free to modify the scopes
-    const url = await receiver.installer?.generateInstallUrl({
+    const url = await helpers.generateSlackInstallUrl(
+      receiver.installer,
       scopes,
       userScopes,
-      metadata: JSON.stringify({
-        tenantId: 'tenant-id',
-        state: 'sessionState',
-      }),
-    });
+      'tenant-id',
+      'sessionState',
+    );
 
     res.send(helpers.buildSlackUrl(url || ''));
   } catch (error) {
@@ -142,12 +160,66 @@ receiver.router.get('/slack/custom_install', async (_req, res, _next) => {
 });
 
 // ------------------------
+// Middleware
+// ------------------------
+const findServiceUser = async (
+  args: (
+    | SlackShortcutMiddlewareArgs<GlobalShortcut>
+    | SlackActionMiddlewareArgs<BlockAction<ButtonAction>>
+  ) &
+    Context, // Workaround
+  // args: Middleware<SlackShortcutMiddlewareArgs<SlackShortcut>>
+  // args: any,
+): Promise<void> => {
+  const teamId = args.body.team?.id;
+  const userId = args.body.user.id;
+  if (!teamId) {
+    throw new Error('Not support Org installation!');
+  }
+  if (!receiver.installer) {
+    throw new Error('Failed to get installer!');
+  }
+  await findUser({
+    context: args.context,
+    client: app.client,
+    teamId,
+    userId,
+    triggerId: args.body.trigger_id,
+    next: args.next,
+  });
+};
+
+const connectUserAccount = async (
+  args: (
+    | SlackShortcutMiddlewareArgs<GlobalShortcut>
+    | SlackActionMiddlewareArgs<BlockAction<ButtonAction>>
+  ) &
+    Context, // Workaround
+  // args: Middleware<SlackShortcutMiddlewareArgs<SlackShortcut>>
+  // args: any,
+): Promise<void> => {
+  if (!receiver.installer) {
+    throw new Error('Failed to get installer!');
+  }
+  await connectAccount({
+    context: args.context,
+    client: app.client,
+    triggerId: args.body.trigger_id,
+    installer: receiver.installer,
+    next: args.next,
+    ack: args.ack,
+  });
+};
+// ------------------------
 // Application Logic
 // ------------------------
 app.shortcut<GlobalShortcut>(
   'clock',
+  findServiceUser,
+  connectUserAccount,
   async ({ ack, context, body, logger }) => {
     logger.info("app.shortcut('clock')");
+    logger.info('context: ', context);
 
     try {
       await openTimeRecordTypesModal(body, context);
@@ -163,6 +235,8 @@ app.shortcut<GlobalShortcut>(
 // （そのボタンはモーダルビューの中にあるという想定）
 app.action<BlockAction<ButtonAction>>(
   /^(clock-in|clock-out|break-start|break-end)/,
+  findServiceUser,
+  connectUserAccount,
   async ({ ack, body, context, logger, action }) => {
     logger.info("app.action('clock-in|clock-out|break-start|break-end)");
     logger.info('body', body);
@@ -244,6 +318,20 @@ app.view<ViewSubmitActionWithResponseUrls>(
 
     await ack({
       response_action: 'clear',
+    });
+  },
+);
+
+app.action<BlockAction<ButtonAction>>(
+  'connect_account',
+  async ({ ack, body, context, logger }) => {
+    logger.info("app.action('connect_account')");
+    await ack();
+
+    await app.client.views.update({
+      token: context.botToken,
+      view_id: body.view?.id,
+      view: payloads.connectLoading,
     });
   },
 );

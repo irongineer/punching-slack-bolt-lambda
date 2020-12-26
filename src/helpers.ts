@@ -1,3 +1,5 @@
+import { InstallProvider } from '@slack/oauth';
+
 // helper to generate a URL with query parameters
 function getUrlWithParams(url: string, params: { [x: string]: string }) {
   if (url.indexOf('?') < 0) url += '?';
@@ -36,8 +38,38 @@ function zeroPadding(n: number): string {
   return n < 10 ? `0${n}` : `${n}`;
 }
 
+async function generateSlackInstallUrl(
+  installer: InstallProvider,
+  scopes: string[],
+  userScopes: string[],
+  tenantId: string,
+  state: string,
+): Promise<string> {
+  const url = await installer.generateInstallUrl({
+    scopes,
+    userScopes,
+    metadata: JSON.stringify({
+      tenantId,
+      state,
+    }),
+  });
+  return url;
+}
+
 function buildSlackUrl(url: string): string {
   return `<a href=${url}><img alt=""Add to Slack"" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>`;
 }
 
-export { copy, getUrlWithParams, hasProperty, getJstTime, buildSlackUrl };
+function buildRedirectButton(teamId: string, appId: string): string {
+  return `success!\n<button onclick="window.location = 'slack://app?team=${teamId}&id=${appId}'">Click here to redirect!!!</button>`;
+}
+
+export {
+  copy,
+  getUrlWithParams,
+  hasProperty,
+  getJstTime,
+  generateSlackInstallUrl,
+  buildSlackUrl,
+  buildRedirectButton,
+};
