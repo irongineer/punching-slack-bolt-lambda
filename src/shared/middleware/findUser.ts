@@ -12,7 +12,7 @@ interface findUserParams {
   next: NextFn;
 }
 
-//  ID情報管理プロバイダ上のユーザからの着信イベントと紐つけた認証ミドルウェア
+// DB上にユーザーが存在するかどうかチェックするミドルウェア
 const findUser = async ({
   client,
   context,

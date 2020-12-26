@@ -15,7 +15,7 @@ interface connectAccountParams {
   ack: AckFn<void>;
 }
 
-//  ID情報管理プロバイダ上のユーザからの着信イベントと紐つけた認証ミドルウェア
+// ユーザー連携が未実施の場合にSlackアプリインストールを要求するミドルウェア
 const connectAccount = async ({
   client,
   context,
