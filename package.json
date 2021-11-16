@@ -22,7 +22,7 @@
   },
   "dependencies": {
     "@slack/bolt": "^2.5.0",
-    "aws-sdk": "^2.784.0",
+    "aws-sdk": "^2.814.0",
     "aws-serverless-express": "^3.3.8",
     "aws-xray-sdk": "^3.2.0"
   },
